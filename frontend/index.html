@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UK House Price Predictor</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #dbeafe;
+            --secondary: #64748b;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #f1f5f9;
+            --card-bg: #ffffff;
+            --text: #0f172a;
+            --text-light: #475569;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --radius: 12px;
+            --radius-lg: 16px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            padding: 1.5rem;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            animation: fadeIn 0.5s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+            animation: slideDown 0.4s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text) 0%, var(--primary) 80%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.25rem;
+        }
+
+        .subtitle {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .status-wrap {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            background: white;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            border: 1px solid var(--border);
+        }
+
+        .status-badge.neutral { background: #f8fafc; color: var(--secondary); }
+        .status-badge.success { background: #dcfce7; color: #166534; border-color: #86efac; }
+        .status-badge.warning { background: #fef9c3; color: #854d0e; border-color: #fde047; }
+        .status-badge.error { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            transition: var(--transition);
+            border: 1px solid var(--border);
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.75rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem 1.25rem;
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-grid label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: var(--text-light);
+            margin-bottom: 0.25rem;
+        }
+
+        .form-grid input,
+        .form-grid select {
+            width: 100%;
+            padding: 0.65rem 0.75rem;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            background: white;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .form-grid input:focus,
+        .form-grid select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .button-row {
+            display: flex;
+            gap: 0.75rem;
+            margin: 1.5rem 0 1rem;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        #predict-btn {
+            background: var(--primary);
+            color: white;
+            flex: 2;
+        }
+
+        #predict-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        #predict-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .secondary-btn {
+            background: white;
+            color: var(--text);
+            border: 1.5px solid var(--border);
+            flex: 1;
+        }
+
+        .secondary-btn:hover {
+            background: var(--bg);
+        }
+
+        .result-box {
+            margin-top: 1rem;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            color: var(--primary);
+            background: linear-gradient(145deg, #f8fafc, #ffffff);
+            padding: 1rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .result-meta {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .message {
+            padding: 0.75rem 1rem;
+            border-radius: 40px;
+            margin: 1rem 0 0;
+            font-size: 0.9rem;
+            text-align: center;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+        }
+
+        .message.hidden {
+            display: none;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .message.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        @media (max-width: 640px) {
+            .page-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .page-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                max-height: 400px;
+            }
+
+            .button-row {
+                flex-direction: column;
+            }
+
+            body {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="page-header">
+            <div>
+                <h1>🏠 UK House Price Prediction System</h1>
+                <p class="subtitle">Professional prediction dashboard aligned with the trained model features.</p>
+            </div>
+            <div class="status-wrap">
+                <span id="api-status" class="status-badge neutral">Checking API...</span>
+            </div>
+        </header>
+
+        <section class="card">
+            <h2>Enter Property & Market Details</h2>
+
+            <form id="prediction-form">
+                <div class="form-grid">
+                    <div>
+                        <label for="property_type">Property Type</label>
+                        <select id="property_type">
+                            <option value="D">Detached</option>
+                            <option value="S">Semi-detached</option>
+                            <option value="T">Terraced</option>
+                            <option value="F">Flat</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="new_build">New Build?</label>
+                        <select id="new_build">
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="freehold">Tenure</label>
+                        <select id="freehold">
+                            <option value="1">Freehold</option>
+                            <option value="0">Leasehold</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="prediction_date">Prediction Date</label>
+                        <input type="date" id="prediction_date" />
+                    </div>
+
+                    <div>
+                        <label for="Town">Town / City</label>
+                        <input type="text" id="Town" placeholder="e.g. London" value="London" />
+                    </div>
+
+                    <div>
+                        <label for="County">County</label>
+                        <input type="text" id="County" placeholder="e.g. Greater London" value="Greater London" />
+                    </div>
+
+                    <div>
+                        <label for="avg_1m_change">Average 1M % Change</label>
+                        <input type="number" step="0.01" id="avg_1m_change" value="0.4" />
+                    </div>
+
+                    <div>
+                        <label for="avg_12m_change">Average 12M % Change</label>
+                        <input type="number" step="0.01" id="avg_12m_change" value="4.2" />
+                    </div>
+
+                    <div>
+                        <label for="salesvolume">Sales Volume</label>
+                        <input type="number" step="1" id="salesvolume" value="850" />
+                    </div>
+
+                    <div>
+                        <label for="detachedprice">Detached Price</label>
+                        <input type="number" step="0.01" id="detachedprice" value="720000" />
+                    </div>
+
+                    <div>
+                        <label for="detached1mpctchange">Detached 1M % Change</label>
+                        <input type="number" step="0.01" id="detached1mpctchange" value="0.3" />
+                    </div>
+
+                    <div>
+                        <label for="detached12mpctchange">Detached 12M % Change</label>
+                        <input type="number" step="0.01" id="detached12mpctchange" value="4.8" />
+                    </div>
+
+                    <div>
+                        <label for="semidetachedprice">Semi-detached Price</label>
+                        <input type="number" step="0.01" id="semidetachedprice" value="510000" />
+                    </div>
+
+                    <div>
+                        <label for="semidetached1mpctchange">Semi-detached 1M % Change</label>
+                        <input type="number" step="0.01" id="semidetached1mpctchange" value="0.4" />
+                    </div>
+
+                    <div>
+                        <label for="semidetached12mpctchange">Semi-detached 12M % Change</label>
+                        <input type="number" step="0.01" id="semidetached12mpctchange" value="4.5" />
+                    </div>
+
+                    <div>
+                        <label for="terracedprice">Terraced Price</label>
+                        <input type="number" step="0.01" id="terracedprice" value="430000" />
+                    </div>
+
+                    <div>
+                        <label for="terraced1mpctchange">Terraced 1M % Change</label>
+                        <input type="number" step="0.01" id="terraced1mpctchange" value="0.5" />
+                    </div>
+
+                    <div>
+                        <label for="terraced12mpctchange">Terraced 12M % Change</label>
+                        <input type="number" step="0.01" id="terraced12mpctchange" value="4.1" />
+                    </div>
+
+                    <div>
+                        <label for="flatprice">Flat Price</label>
+                        <input type="number" step="0.01" id="flatprice" value="370000" />
+                    </div>
+
+                    <div>
+                        <label for="flat1mpctchange">Flat 1M % Change</label>
+                        <input type="number" step="0.01" id="flat1mpctchange" value="0.2" />
+                    </div>
+
+                    <div>
+                        <label for="flat12mpctchange">Flat 12M % Change</label>
+                        <input type="number" step="0.01" id="flat12mpctchange" value="3.6" />
+                    </div>
+                </div>
+
+                <div class="button-row">
+                    <button type="submit" id="predict-btn">Predict Price</button>
+                    <button type="button" id="reset-btn" class="secondary-btn">Reset</button>
+                </div>
+            </form>
+
+            <div id="form-message" class="message hidden"></div>
+            <div id="result" class="result-box">£ ---</div>
+            <div id="resultMeta" class="result-meta">Awaiting prediction</div>
+        </section>
+    </div>
+
+    <script>
+        const API_BASE = "http://localhost:5000";
+
+        const form = document.getElementById("prediction-form");
+        const predictBtn = document.getElementById("predict-btn");
+        const resetBtn = document.getElementById("reset-btn");
+        const resultDiv = document.getElementById("result");
+        const resultMeta = document.getElementById("resultMeta");
+        const messageDiv = document.getElementById("form-message");
+        const apiStatus = document.getElementById("api-status");
+
+        function showMessage(text, type = "info") {
+            messageDiv.textContent = text;
+            messageDiv.classList.remove("hidden", "error", "success");
+            if (type === "error") messageDiv.classList.add("error");
+            if (type === "success") messageDiv.classList.add("success");
+        }
+
+        function hideMessage() {
+            messageDiv.classList.add("hidden");
+        }
+
+        function setApiStatus(status, text) {
+            apiStatus.className = `status-badge ${status}`;
+            apiStatus.textContent = text;
+        }
+
+        async function checkApiHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/`);
+                if (response.ok) {
+                    setApiStatus("success", "API Connected");
+                } else {
+                    setApiStatus("warning", "API Error");
+                }
+            } catch (error) {
+                setApiStatus("error", "API Offline");
+            }
+        }
+
+        function resetFormFields() {
+            document.getElementById("property_type").value = "D";
+            document.getElementById("new_build").value = "0";
+            document.getElementById("freehold").value = "1";
+            document.getElementById("prediction_date").value = new Date().toISOString().split("T")[0];
+            document.getElementById("Town").value = "London";
+            document.getElementById("County").value = "Greater London";
+            document.getElementById("avg_1m_change").value = "0.4";
+            document.getElementById("avg_12m_change").value = "4.2";
+            document.getElementById("salesvolume").value = "850";
+            document.getElementById("detachedprice").value = "720000";
+            document.getElementById("detached1mpctchange").value = "0.3";
+            document.getElementById("detached12mpctchange").value = "4.8";
+            document.getElementById("semidetachedprice").value = "510000";
+            document.getElementById("semidetached1mpctchange").value = "0.4";
+            document.getElementById("semidetached12mpctchange").value = "4.5";
+            document.getElementById("terracedprice").value = "430000";
+            document.getElementById("terraced1mpctchange").value = "0.5";
+            document.getElementById("terraced12mpctchange").value = "4.1";
+            document.getElementById("flatprice").value = "370000";
+            document.getElementById("flat1mpctchange").value = "0.2";
+            document.getElementById("flat12mpctchange").value = "3.6";
+
+            resultDiv.textContent = "£ ---";
+            resultMeta.textContent = "Awaiting prediction";
+            hideMessage();
+        }
+
+        function buildPayload() {
+            const propType = document.getElementById("property_type").value;
+
+            const typeFeatures = {
+                type_D: propType === "D" ? 1 : 0,
+                type_S: propType === "S" ? 1 : 0,
+                type_T: propType === "T" ? 1 : 0,
+                type_F: propType === "F" ? 1 : 0
+            };
+
+            const dateInput = document.getElementById("prediction_date").value;
+            let year = 2024, month = 1, quarter = 1;
+
+            if (dateInput) {
+                const d = new Date(dateInput);
+                year = d.getFullYear();
+                month = d.getMonth() + 1;
+                quarter = Math.floor(d.getMonth() / 3) + 1;
+            }
+
+            return {
+                ...typeFeatures,
+                new_build: parseInt(document.getElementById("new_build").value) || 0,
+                freehold: parseInt(document.getElementById("freehold").value) || 0,
+                year,
+                month,
+                quarter,
+                Town: document.getElementById("Town").value.trim(),
+                County: document.getElementById("County").value.trim(),
+                avg_1m_change: parseFloat(document.getElementById("avg_1m_change").value) || 0,
+                avg_12m_change: parseFloat(document.getElementById("avg_12m_change").value) || 0,
+                salesvolume: parseFloat(document.getElementById("salesvolume").value) || 0,
+                detachedprice: parseFloat(document.getElementById("detachedprice").value) || 0,
+                detached1mpctchange: parseFloat(document.getElementById("detached1mpctchange").value) || 0,
+                detached12mpctchange: parseFloat(document.getElementById("detached12mpctchange").value) || 0,
+                semidetachedprice: parseFloat(document.getElementById("semidetachedprice").value) || 0,
+                semidetached1mpctchange: parseFloat(document.getElementById("semidetached1mpctchange").value) || 0,
+                semidetached12mpctchange: parseFloat(document.getElementById("semidetached12mpctchange").value) || 0,
+                terracedprice: parseFloat(document.getElementById("terracedprice").value) || 0,
+                terraced1mpctchange: parseFloat(document.getElementById("terraced1mpctchange").value) || 0,
+                terraced12mpctchange: parseFloat(document.getElementById("terraced12mpctchange").value) || 0,
+                flatprice: parseFloat(document.getElementById("flatprice").value) || 0,
+                flat1mpctchange: parseFloat(document.getElementById("flat1mpctchange").value) || 0,
+                flat12mpctchange: parseFloat(document.getElementById("flat12mpctchange").value) || 0
+            };
+        }
+
+        async function handlePredict(event) {
+            event.preventDefault();
+
+            predictBtn.disabled = true;
+            predictBtn.textContent = "Predicting...";
+            hideMessage();
+            resultDiv.textContent = "£ ---";
+            resultMeta.textContent = "Calculating...";
+
+            try {
+                const payload = buildPayload();
+
+                const response = await fetch(`${API_BASE}/predict`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || `HTTP ${response.status}`);
+                }
+
+                if (data.predicted_price !== undefined) {
+                    const formattedPrice = new Intl.NumberFormat("en-GB", {
+                        style: "currency",
+                        currency: "GBP",
+                        maximumFractionDigits: 0
+                    }).format(data.predicted_price);
+
+                    resultDiv.textContent = formattedPrice;
+                    resultMeta.textContent = `Prediction based on ${payload.Town}, ${payload.County}`;
+                    showMessage("Prediction successful!", "success");
+                    setApiStatus("success", "API Connected");
+                } else {
+                    throw new Error("Invalid response from server");
+                }
+            } catch (error) {
+                resultDiv.textContent = "Error";
+                resultMeta.textContent = error.message;
+                showMessage(`Error: ${error.message}`, "error");
+                setApiStatus("error", "Prediction Failed");
+            } finally {
+                predictBtn.disabled = false;
+                predictBtn.textContent = "Predict Price";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("prediction_date").value = new Date().toISOString().split("T")[0];
+
+            form.addEventListener("submit", handlePredict);
+            predictBtn.addEventListener("click", handlePredict);
+            resetBtn.addEventListener("click", resetFormFields);
+
+            checkApiHealth();
+        });
+    </script>
+</body>
+</html>
